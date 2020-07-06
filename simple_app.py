@@ -6,17 +6,20 @@ from database import Drivers
 app = Flask(__name__)
 
 
-@app.route('/drivers', methods=['GET', 'POST', 'DELETE'])
+@app.route('/drivers/<int:post_id>')
+def shod_driver_profile(post_id):
+    new_driver = Drivers()
+    return str(new_driver.show_drivers(post_id))
+
+
+@app.route('/drivers', methods=['POST', 'DELETE'])
 def driver():
     try:
         new_driver = Drivers()
         json_from_request = json.loads(request.data.decode('utf-8'))
     except Exception:
         return Response('Произошла ошибка', status=400)
-    if request.method == 'GET':
-        new_driver.show_drivers('name')
-        return 'Sasai'
-    elif request.method == 'POST':
+    if request.method == 'POST':
         try:
             new_driver.insert_drivers(json_from_request['name'], json_from_request['car'])
             return Response('Created', status=201)
