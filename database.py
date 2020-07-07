@@ -40,6 +40,11 @@ class Drivers(Base):
             player_by_class = session.query(Drivers).filter(Drivers.id == id).all()
             print(str(player_by_class))
             return player_by_class
+    def delete_driver(self, id):
+        with session_scope() as session:
+            session.query(Drivers).filter(Drivers.id == id).delete()
+            session.commit()
+
 
     def __repr__(self):
         return str({"id": self.id, "name": self.name, "car": self.car})

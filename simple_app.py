@@ -26,7 +26,10 @@ def driver():
         except Exception:
             return Response('Произошла ошибка', status=400)
     elif request.method == 'DELETE':
-        pass
+        print(json_from_request)
+        print((json_from_request['id']))
+        new_driver.delete_driver(json_from_request['id'])
+        return Response('Deleted', status=201)
 
 
 @app.route('/clients', methods=['GET', 'POST', 'DELETE'])
