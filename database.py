@@ -72,6 +72,9 @@ class Clients(Base):
             session.query(Clients).filter(Clients.id == id).delete()
             session.commit()
 
+    def __repr__(self):
+        return str({"id": self.id, "name": self.name, "vip": self.is_vip})
+
 class Orders(Base):
     Session = sessionmaker(bind=engine)
     session = Session()
