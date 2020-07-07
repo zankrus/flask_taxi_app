@@ -1,8 +1,7 @@
 from flask import Flask
 from flask import request, Response
 from flask import json
-from database import Drivers, Clients, Orders
-
+from database import Drivers, Clients, Orders, striper
 app = Flask(__name__)
 
 
@@ -82,19 +81,30 @@ def client():
             return Response('Неправильный запрос', status=400)
 
 
-@app.route('/orders/<int:order_id>')
+@app.route('/orders/<int:order_id>', methods=['GET', 'PUT'])
 def show_order(order_id):
     try:
         new_order = Orders()
         resp = str(new_order.show_order(order_id))
+    except Exception:
+        return Response('Неправильный запрос', status=400)
+    if request.method == 'GET':
         if resp == '[]':
             return Response('Объект не найден в базе', status=404)
         return str(resp)
-    except Exception:
-        return Response('Неправильный запрос', status=400)
+    if request.method == 'PUT':
+        json_from_request = json.loads(request.data.decode('utf-8'))
+        if resp == '[]':
+            return Response('Объект не найден в базе', status=404)
+        print(striper(resp)['status'])!!!!!!!!!!!!!!!!!!!11111111111111111111111111
+        new_order.update_orders(order_id,
+                                json_from_request['status'],
+                                json_from_request['date_created'],
+                                json_from_request['driver_id'],
+                                json_from_request['client_id'])
+        return Response('Изменено', status=200)
 
-
-@app.route('/orders', methods=['POST', 'PUT'])
+@app.route('/orders', methods=['POST'])
 def order():
     try:
         new_order = Orders()
@@ -111,8 +121,7 @@ def order():
             return Response('Created', status=201)
         except ValueError:
             return Response('Неправильный запрос', status=400)
-    elif request.method == 'PUT':
-        pass
+
 
 
 if __name__ == '__main__':

@@ -91,7 +91,6 @@ class Orders(Base):
     def show_order(self, order_id):
         with session_scope() as session:
             show_ord = session.query(Orders).filter(Orders.id == order_id).all()
-            print(str(show_ord))
             return show_ord
 
     def insert_order(self, address_from, address_to, client_id, driver_id, date, status):
@@ -100,16 +99,25 @@ class Orders(Base):
                                driver_id=driver_id, date_created=dateutil.parser.isoparse(date), status=status))
             session.commit()
 
+    def update_orders(self, order_id, new_status, new_date, new_driver, new_client):
+        with session_scope() as session:
+            session.query(Orders).filter(Orders.id == order_id).update({Orders.status: new_status,
+                                                                        Orders.date_created: dateutil.parser.isoparse(
+                                                                            new_date),
+                                                                        Orders.driver_id: new_driver,
+                                                                        Orders.client_id: new_client})
+            session.commit()
+
     def __repr__(self):
         return str({"id": self.id, "address_from": self.address_from, "address_to": self.address_to,
                     "client_id": self.client_id, "driver_id": self.driver_id, "date_created": self.date_created,
                     "status": self.status})
 
 
-#
-
-
 Base.metadata.create_all(engine)
 
 
-
+def striper(string: str):
+    edited_str = string.replace('[', "").replace(']', '').replace("'", '"')
+    dict_from_str = eval(edited_str)
+    return dict_from_str
