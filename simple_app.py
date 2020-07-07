@@ -1,7 +1,7 @@
 from flask import Flask
 from flask import request, Response
 from flask import json
-from database import Drivers, Clients
+from database import Drivers, Clients, Orders
 
 app = Flask(__name__)
 
@@ -11,7 +11,7 @@ def show_driver_profile(post_id):
     try:
         new_driver = Drivers()
         resp = str(new_driver.show_drivers(post_id))
-        if resp == '[]' :
+        if resp == '[]':
             return Response('Объект не найден в базе', status=404)
         return str(resp)
     except Exception:
@@ -82,13 +82,36 @@ def client():
             return Response('Неправильный запрос', status=400)
 
 
-@app.route('/orders', methods=['GET', 'POST', 'DELETE'])
+@app.route('/orders/<int:order_id>')
+def show_order(order_id):
+    try:
+        new_order = Orders()
+        resp = str(new_order.show_order(order_id))
+        if resp == '[]':
+            return Response('Объект не найден в базе', status=404)
+        return str(resp)
+    except Exception:
+        return Response('Неправильный запрос', status=400)
+
+
+@app.route('/orders', methods=['POST', 'PUT'])
 def order():
-    if request.method == 'GET':
-        return 'Sasai'
-    elif request.method == 'POST':
-        pass
-    elif request.method == 'DELETE':
+    try:
+        new_order = Orders()
+        json_from_request = json.loads(request.data.decode('utf-8'))
+    except Exception:
+        return Response('Произошла ошибка', status=400)
+    if request.method == 'POST':
+        try:
+            new_order.insert_order(json_from_request['address_from'], json_from_request['address_to'],
+                                   json_from_request['client_id'],
+                                   json_from_request['driver_id'],
+                                   json_from_request['date_created'], json_from_request['status']
+                                   )
+            return Response('Created', status=201)
+        except ValueError:
+            return Response('Неправильный запрос', status=400)
+    elif request.method == 'PUT':
         pass
 
 
