@@ -1,12 +1,16 @@
+"""Flask app."""
 from flask import Flask
 from flask import request, Response
 from flask import json
 from database import Drivers, Clients, Orders, striper
+from typing import Any
+
 app = Flask(__name__)
 
 
 @app.route('/drivers/<int:post_id>')
-def show_driver_profile(post_id):
+def show_driver_profile(post_id: int) -> Any:
+    """Funct for show drivers by id."""
     try:
         new_driver = Drivers()
         resp = str(new_driver.show_drivers(post_id))
@@ -18,7 +22,8 @@ def show_driver_profile(post_id):
 
 
 @app.route('/drivers', methods=['POST', 'DELETE'])
-def driver():
+def driver() -> Response:
+    """Func for delete and add to drivers."""
     try:
         new_driver = Drivers()
         json_from_request = json.loads(request.data.decode('utf-8'))
@@ -41,10 +46,13 @@ def driver():
             return Response('Удалено', status=204)
         except Exception:
             return Response('Неправильный запрос', status=400)
+    else:
+        return Response('Неправильный запрос', status=400)
 
 
 @app.route('/clients/<int:client_id>')
-def show_client_profile(client_id):
+def show_client_profile(client_id: int) -> Any:
+    """Func for show clients."""
     try:
         new_client = Clients()
         resp = str(new_client.show_clients(client_id))
@@ -56,7 +64,8 @@ def show_client_profile(client_id):
 
 
 @app.route('/clients', methods=['POST', 'DELETE'])
-def client():
+def client() -> Response:
+    """Func for add and delete clients."""
     try:
         new_client = Clients()
         json_from_request = json.loads(request.data.decode('utf-8'))
@@ -79,10 +88,13 @@ def client():
             return Response('Deleted', status=201)
         except Exception:
             return Response('Неправильный запрос', status=400)
+    else:
+        return Response('Неправильный запрос', status=400)
 
 
 @app.route('/orders/<int:order_id>', methods=['GET', 'PUT'])
-def show_order(order_id):
+def show_order(order_id: int) -> Any:
+    """Func for show orders."""
     try:
         new_order = Orders()
         resp = str(new_order.show_order(order_id))
@@ -96,16 +108,25 @@ def show_order(order_id):
         json_from_request = json.loads(request.data.decode('utf-8'))
         if resp == '[]':
             return Response('Объект не найден в базе', status=404)
-        print(striper(resp)['status'])!!!!!!!!!!!!!!!!!!!11111111111111111111111111
-        new_order.update_orders(order_id,
-                                json_from_request['status'],
-                                json_from_request['date_created'],
-                                json_from_request['driver_id'],
-                                json_from_request['client_id'])
-        return Response('Изменено', status=200)
+        print(striper(resp)['status'])
+        print(json_from_request['status'])
+        if striper(resp)['status'] == 'not_accepted' and json_from_request['status'] in ['in progress', 'cancelled']:
+            new_order.update_orders_not_accepted(order_id,
+                                                 json_from_request['status'],
+                                                 json_from_request['date_created'],
+                                                 json_from_request['driver_id'],
+                                                 json_from_request['client_id'])
+            return Response('Изменено', status=200)
+        elif striper(resp)['status'] == 'in progress' and json_from_request['status'] in ['done', 'cancelled']:
+            new_order.update_orders(order_id,
+                                    json_from_request['status'])
+            return Response('Изменено', status=200)
+        return Response('Неверная последовательность статусов', status=400)
+
 
 @app.route('/orders', methods=['POST'])
-def order():
+def order() -> Response:
+    """Func for add  orders."""
     try:
         new_order = Orders()
         json_from_request = json.loads(request.data.decode('utf-8'))
@@ -121,7 +142,8 @@ def order():
             return Response('Created', status=201)
         except ValueError:
             return Response('Неправильный запрос', status=400)
-
+    else:
+        return Response('Неправильный запрос', status=400)
 
 
 if __name__ == '__main__':
